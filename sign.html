@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign Up</title>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+        }
+
+        #video-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            z-index: -1;
+        }
+
+        .signup-form {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.7);
+            padding: 20px;
+            border-radius: 10px;
+            color: white;
+            text-align: center;
+        }
+
+        form {
+            max-width: 300px;
+            margin: 0 auto;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+
+        input[type="text"],
+        input[type="email"],
+        input[type="password"],
+        input[type="submit"] {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            box-sizing: border-box;
+            background-color: rgba(255, 255, 255, 0.8);
+        }
+
+        input[type="submit"] {
+            background-color: #ff7200;
+            color: white;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        input[type="submit"]:hover {
+            background-color: #ff5c00;
+        }
+
+        #notification {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #4CAF50;
+            color: white;
+            padding: 15px;
+            border-radius: 5px;
+            display: none;
+        }
+
+        /* User profile section styles */
+        .user-profile {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            align-items: center;
+            color: white;
+            font-size: 14px;
+        }
+
+        .user-profile img {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            margin-right: 10px;
+        }
+
+        .logout-btn {
+            background-color: #ff7200;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            padding: 8px 16px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+    <video autoplay muted loop id="video-bg">
+        <source src="D:\Foestra\Videos and Photos\Video in Cream Black Modern Elegance Style.mp4" type="video/mp4">
+        Your browser does not support the video tag.
+    </video>
+
+    <div class="signup-form">
+        <h2>Sign Up</h2>
+        <form id="signup-form">
+            <label for="email">Email:</label>
+            <input type="email" id="email" name="email">
+            <label for="password">Password:</label>
+            <input type="password" id="password" name="password">
+            <input type="submit" value="Submit">
+        </form>
+    </div>
+
+    <!-- User profile section -->
+    <div class="user-profile" id="userProfile" style="display: none;">
+        <img src="" alt="Profile Picture" id="profilePic">
+        <span id="userName"></span>
+        <button class="logout-btn" id="logoutBtn">Logout</button>
+    </div>
+
+    <div id="notification"></div>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/8.2.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.2.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.2.1/firebase-database.js"></script>
+    
+    <script>
+        // Initialize Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyAMq80IFSKIU-RASjohnLzVQR1dR3cbEhM",
+            authDomain: "foestra-4fef5.firebaseapp.com",
+            projectId: "foestra-4fef5",
+            storageBucket: "foestra-4fef5.appspot.com",
+            messagingSenderId: "467200913517",
+            appId: "1:467200913517:web:your-web-api-key",
+            measurementId: "G-your-measurement-id"
+        };
+
+        // Initialize Firebase app
+        firebase.initializeApp(firebaseConfig);
+
+        // Sign up with email/password
+        document.getElementById('signup-form').addEventListener('submit', function(event) {
+            event.preventDefault(); // Prevent form submission
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+
+            firebase.auth().createUserWithEmailAndPassword(email, password)
+                .then((userCredential) => {
+                    // Signed up successfully
+                    const user = userCredential.user;
+                    console.log('User signed up:', user);
+
+                    // Show notification
+                    const notification = document.getElementById('notification');
+                    notification.textContent = 'Thank you for signing up, ' + email + '!';
+                    notification.style.display = 'block';
+
+                    // Clear the form after submission
+                    document.getElementById('signup-form').reset();
+
+                    // Hide notification after 5 seconds
+                    setTimeout(function() {
+                        notification.style.display = 'none';
+                    }, 5000);
+                })
+                .catch((error) => {
+                    // Handle errors
+                    console.error('Error signing up:', error);
+                });
+        });
+
+        // Check if a user is signed in
+        firebase.auth().onAuthStateChanged(function(user) {
+            if (user) {
+                // User is signed in
+                const displayName = user.displayName;
+                const email = user.email;
+                const photoURL = user.photoURL;
+
+                // Display user profile section
+                const userProfile = document.getElementById('userProfile');
+                userProfile.style.display = 'flex';
+
+                // Set user profile information
+                document.getElementById('profilePic').src = photoURL || 'https://via.placeholder.com/30';
+                document.getElementById('userName').textContent = displayName || email;
+
+                // Logout button functionality
+                document.getElementById('logoutBtn').addEventListener('click', function() {
+                    firebase.auth().signOut().then(() => {
+                        // Sign-out successful
+                        window.location.href = "index.html"; // Redirect to index.html after logout
+                    }).catch((error) => {
+                        // An error happened
+                        console.error('Error signing out:', error);
+                    });
+                });
+            } else {
+                // User is signed out
+                // Hide user profile section
+                const userProfile = document.getElementById('userProfile');
+                userProfile.style.display = 'none';
+            }
+        });
+    </script>
+
+</body>
+</html>
